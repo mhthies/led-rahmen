@@ -1,0 +1,4 @@
+
+const char* ssid     = "SSID";
+const char* password = "PSK";
+const char* hostname = "bilderrahmen";
