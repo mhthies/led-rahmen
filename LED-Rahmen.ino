@@ -158,18 +158,15 @@ void setup() {
   server.begin();
   
   // tell FastLED about the LED strip configuration
-  FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(0xFFE0F0);
 
   // set master brightness control
   FastLED.setBrightness(SETTINGS.brightness);
 }
 
-
-// List of patterns to cycle through.  Each is defined as a separate function below.
+// List of animation patterns
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { colorful, rainbow_fade };
-
-uint8_t gHue = 0; // rotating "base color" used by many of the patterns
+SimplePatternList gPatterns = { colorful, rainbow_fade, sparkles };
   
 void loop()
 {
@@ -179,9 +176,6 @@ void loop()
   FastLED.delay(1000/FRAMES_PER_SECOND);
   gPatterns[SETTINGS.currentPattern]();
   FastLED.show();
-
-  // do some periodic updates
-  EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
 }
 
 void colorful() 
