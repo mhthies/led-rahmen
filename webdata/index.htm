@@ -14,10 +14,10 @@
                 updateLock = true;
 
                 var xmlhttp = new XMLHttpRequest();
+                xmlhttp.addEventListener("load", onDataLoad);
                 xmlhttp.addEventListener('loadend', function() {
                     updateLock = false;
                 });
-                xmlhttp.addEventListener("load", onDataLoad);
                 xmlhttp.open("GET", apiEndpoint);
                 xmlhttp.setRequestHeader("Content-Type", "application/json");
                 xmlhttp.send();
@@ -36,8 +36,22 @@
                 }
 
                 for (key in data) {
-                    // TODO special handling for power and currentPattern
+                    // Special handling for buttons
+                    if (key == "power") {
+                        document.getElementById("button-power").classList.toggle('active', data[key]);
+                        continue;
+                    }
+                    if (key == "currentPattern") {
+                        Array.from(document.getElementsByClassName("button-modeactivate"))
+                            .forEach(function(item) {
+                                var decision = parseInt(item.getAttribute('data-value')) == data[key];
+                                item.classList.toggle('active', decision);
+                                item.closest('.modebox').classList.toggle('active', decision);
+                            });
+                        continue;
+                    }
 
+                    // Otherwise, we search for an input with the correct name
                     var inputs = document.getElementsByName(key);
                     if (inputs.length == 0) {
                         continue;
@@ -49,7 +63,7 @@
                 }
             }
 
-            function sendData(key, value, callback) {
+            function sendData(key, value) {
                 var data = new Object();
                 data[key] = value;
 
@@ -57,7 +71,10 @@
                 xmlhttp.open("POST", apiEndpoint);
                 xmlhttp.setRequestHeader("Content-Type", "application/json");
                 xmlhttp.send(JSON.stringify(data));
-                xmlhttp.addEventListener("load", callback);
+                xmlhttp.addEventListener("load", function() {
+                    // After each data sending do an update immediately to refresh the UI
+                    fetchData();
+                });
             }
 
 
@@ -77,9 +94,7 @@
                 } else if (dataType === "float") {
                     value = parseFloat(value);
                 }
-                sendData(this.name, value, function() {
-                    fetchData();
-                });
+                sendData(this.name, value);
             }
 
             function fieldChangeHandler(event) {
@@ -87,7 +102,7 @@
                 if (this.timeout) {
                     clearTimeout(this.timeout);
                 }
-                this.timeout = setTimeout(fieldTimeoutHandler.bind(this), 700);
+                this.timeout = setTimeout(fieldTimeoutHandler.bind(this), 1000);
             }
 
             // Onload function
@@ -99,8 +114,22 @@
                         input.addEventListener("blur", fieldTimeoutHandler);
                     });
 
-                // TODO register onClick handlers for buttons
-                setInterval(fetchData, 5000);
+                // Register click handler for buttons
+                document.getElementById('button-power').addEventListener('click', function(){
+                    var value = !this.classList.contains('active');
+                    sendData('power', value);
+                });
+                Array.from(document.getElementsByClassName("button-modeactivate"))
+                    .forEach(function(input) {
+                        input.addEventListener('click', function(){
+                            var value = parseInt(this.getAttribute('data-value'));
+                            sendData('currentPattern', value);
+                        });
+                    });
+
+                // Cyclic update of current settings
+                setInterval(fetchData, 15000);
+                // Update settings instantly
                 fetchData();
             });
         </script>
@@ -203,8 +232,8 @@
                 </table>
             </div>
 
-            <div class="modebox active">
-                <button type="button" class="button-modeactivate active" data-value="1">Rainbow Fade</button>
+            <div class="modebox">
+                <button type="button" class="button-modeactivate" data-value="1">Rainbow Fade</button>
 
                 <table>
                     <tr><td>Geschwindigkeit:</td><td><input type="number" class="activeInput" name="rainbow_fade_speed" min="0" max="255" data-type="int" /></td></tr>
@@ -215,7 +244,7 @@
             </div>
 
             <div class="modebox">
-                <button type="button" class="button-modeactivate" data-value="1">Sparkles</button>
+                <button type="button" class="button-modeactivate" data-value="2">Sparkles</button>
 
                 <table>
                     <tr><td>Sättigung:</td><td><input type="number" class="activeInput" name="sparkles_sat" min="0" max="255" data-type="int" /></td></tr>
