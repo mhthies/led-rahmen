@@ -52,6 +52,7 @@ void handleData() {
     StaticJsonDocument<JSON_CAPACITY> doc;
     doc["power"] = SETTINGS.power;
     doc["brightness"] = SETTINGS.brightness;
+    doc["currentPattern"] = SETTINGS.currentPattern;
     doc["colorful_speed"] = SETTINGS.colorful_speed;
     doc["colorful_sat"] = SETTINGS.colorful_sat;
     char buf[JSON_BUF];
@@ -88,6 +89,12 @@ void handleData() {
         if (kv.value().is<uint8_t>()) {
           SETTINGS.brightness = kv.value().as<uint8_t>();
           FastLED.setBrightness(SETTINGS.power ? SETTINGS.brightness : 0);
+        }
+      } else if (!strcmp(kv.key().c_str(), "currentPattern")) {
+        if (kv.value().is<uint8_t>()) {
+          uint8_t value = kv.value().as<uint8_t>();
+          if (value >= 0 && value < gPatternsLen)
+            SETTINGS.currentPattern = kv.value().as<uint8_t>();
         }
       } else if (!strcmp(kv.key().c_str(), "colorful_speed")) {
         if (kv.value().is<uint8_t>())
