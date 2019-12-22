@@ -55,6 +55,13 @@ void handleData() {
     doc["currentPattern"] = SETTINGS.currentPattern;
     doc["colorful_speed"] = SETTINGS.colorful_speed;
     doc["colorful_sat"] = SETTINGS.colorful_sat;
+    doc["rainbow_fade_speed"] = SETTINGS.rainbow_fade_speed;
+    doc["rainbow_fade_sat"] = SETTINGS.rainbow_fade_sat;
+    doc["rainbow_fade_size"] = SETTINGS.rainbow_fade_size;
+    doc["rainbow_fade_direction"] = SETTINGS.rainbow_fade_direction;
+    doc["sparkles_fade"] = SETTINGS.sparkles_fade;
+    doc["sparkles_sat"] = SETTINGS.sparkles_sat;
+    doc["sparkles_rate"] = SETTINGS.sparkles_rate;
     char buf[JSON_BUF];
     serializeJson(doc, buf);
     server.send(200, "application/json", buf)  ;
@@ -83,12 +90,15 @@ void handleData() {
       if (!strcmp(kv.key().c_str(), "power")) {
         if (kv.value().is<bool>()) {
           SETTINGS.power = kv.value().as<bool>();
-          FastLED.setBrightness(SETTINGS.power ? SETTINGS.brightness : 0);
+          FastLED.setBrightness(SETTINGS.power ? (SETTINGS.brightness * (uint16_t)255 / 100) : 0);
         }
       } else if (!strcmp(kv.key().c_str(), "brightness")) {
         if (kv.value().is<uint8_t>()) {
-          SETTINGS.brightness = kv.value().as<uint8_t>();
-          FastLED.setBrightness(SETTINGS.power ? SETTINGS.brightness : 0);
+          uint8_t value = kv.value().as<uint8_t>();
+          if (value >= 0 && value <= 100) {
+            SETTINGS.brightness = kv.value().as<uint8_t>();
+            FastLED.setBrightness(SETTINGS.power ? (SETTINGS.brightness * (uint16_t)255 / 100) : 0);
+          }
         }
       } else if (!strcmp(kv.key().c_str(), "currentPattern")) {
         if (kv.value().is<uint8_t>()) {
@@ -96,12 +106,63 @@ void handleData() {
           if (value >= 0 && value < gPatternsLen)
             SETTINGS.currentPattern = kv.value().as<uint8_t>();
         }
+
       } else if (!strcmp(kv.key().c_str(), "colorful_speed")) {
-        if (kv.value().is<uint8_t>())
-          SETTINGS.colorful_speed = kv.value().as<uint8_t>();
+        if (kv.value().is<uint8_t>()) {
+          uint8_t value = kv.value().as<uint8_t>();
+          if (value >= 0 && value <= 100)
+            SETTINGS.colorful_speed = kv.value().as<uint8_t>();
+        }
       } else if (!strcmp(kv.key().c_str(), "colorful_sat")) {
-        if (kv.value().is<uint8_t>())
-          SETTINGS.colorful_sat = kv.value().as<uint8_t>();
+        if (kv.value().is<uint8_t>()) {
+          uint8_t value = kv.value().as<uint8_t>();
+          if (value >= 0 && value <= 100)
+            SETTINGS.colorful_sat = kv.value().as<uint8_t>();
+        }
+
+      } else if (!strcmp(kv.key().c_str(), "rainbow_fade_speed")) {
+        if (kv.value().is<uint8_t>()) {
+          uint8_t value = kv.value().as<uint8_t>();
+          if (value >= 0 && value <= 100)
+            SETTINGS.rainbow_fade_speed = kv.value().as<uint8_t>();
+        }
+      } else if (!strcmp(kv.key().c_str(), "rainbow_fade_sat")) {
+        if (kv.value().is<uint8_t>()) {
+          uint8_t value = kv.value().as<uint8_t>();
+          if (value >= 0 && value <= 100)
+            SETTINGS.rainbow_fade_sat = kv.value().as<uint8_t>();
+        }
+      } else if (!strcmp(kv.key().c_str(), "rainbow_fade_size")) {
+        if (kv.value().is<uint8_t>()) {
+          uint8_t value = kv.value().as<uint8_t>();
+          if (value >= 0 && value <= 100)
+            SETTINGS.rainbow_fade_size = kv.value().as<uint8_t>();
+        }
+      } else if (!strcmp(kv.key().c_str(), "rainbow_fade_direction")) {
+        if (kv.value().is<uint16_t>()) {
+          uint16_t value = kv.value().as<uint16_t>();
+          if (value >= 0 && value <= 360)
+            SETTINGS.rainbow_fade_direction = kv.value().as<uint16_t>();
+        }
+
+      } else if (!strcmp(kv.key().c_str(), "sparkles_fade")) {
+        if (kv.value().is<uint8_t>()) {
+          uint8_t value = kv.value().as<uint8_t>();
+          if (value >= 0 && value <= 100)
+            SETTINGS.sparkles_fade = kv.value().as<uint8_t>();
+        }
+      } else if (!strcmp(kv.key().c_str(), "sparkles_sat")) {
+        if (kv.value().is<uint8_t>()) {
+          uint8_t value = kv.value().as<uint8_t>();
+          if (value >= 0 && value <= 100)
+            SETTINGS.sparkles_sat = kv.value().as<uint8_t>();
+        }
+      } else if (!strcmp(kv.key().c_str(), "sparkles_rate")) {
+        if (kv.value().is<uint8_t>()) {
+          uint8_t value = kv.value().as<uint8_t>();
+          if (value >= 0 && value <= 100)
+            SETTINGS.sparkles_rate = kv.value().as<uint8_t>();
+        }
       }
     }
     
@@ -158,16 +219,16 @@ void setup() {
   FastLED.addLeds<WS2812,4,GRB>(leds, NUM_LEDS).setCorrection(0xFFE0F0);
 
   // set master brightness control
-  FastLED.setBrightness(SETTINGS.brightness);
+  FastLED.setBrightness(SETTINGS.power ? (SETTINGS.brightness * (uint16_t)255 / 100) : 0);
 }
 
 
 void loop()
 {
+  gPatterns[SETTINGS.currentPattern]();
+  FastLED.show();
   MDNS.update();
   server.handleClient();
   // TODO adapt dynamically
   FastLED.delay(1000/FRAMES_PER_SECOND);
-  gPatterns[SETTINGS.currentPattern]();
-  FastLED.show();
 }
