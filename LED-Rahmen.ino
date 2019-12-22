@@ -5,6 +5,8 @@
 #include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
 
+#include "patterns.hpp"
+#include "settings.hpp"
 #include "webdata.h"
 #include "config.h"
 
@@ -16,43 +18,27 @@ FASTLED_USING_NAMESPACE
 #warning "Requires FastLED 3.1 or later; check github for latest code."
 #endif
 
-#define DATA_PIN    4
-//#define CLK_PIN   4
-#define LED_TYPE    WS2812
-#define COLOR_ORDER GRB
-const uint16_t NUM_LEDS = 28;
+// static setup
 const size_t JSON_CAPACITY = 256;
 const size_t JSON_BUF = 1024;
-
-#define FRAMES_PER_SECOND  120
-
-
-/* Custom data structures */
-struct Settings {
-  bool power = true;
-  uint8_t brightness = 120;
-
-  uint8_t currentPattern = 0;
-
-  uint8_t colorful_speed = 50;
-  uint8_t colorful_sat = 96;
-  uint8_t rainbow_fade_speed = 50;
-  uint8_t rainbow_fade_sat = 96;
-  uint8_t rainbow_fade_size = 50;
-  uint8_t rainbow_fade_direction = 0;
-  uint8_t sparkles_sat = 96;
-  uint8_t sparkles_fade = 96;
-  uint8_t sparkles_rate = 96;
-};
+const uint16_t FRAMES_PER_SECOND = 120;
 
 
-/* Global data */
+/* *****************************************************************************
+ * Global data
+ * ****************************************************************************/
+extern const uint16_t NUM_LEDS = 28;
 CRGB leds[NUM_LEDS];
 Settings SETTINGS;
 ESP8266WebServer server(80);
 
+extern SimplePatternList gPatterns;
+extern size_t gPatternsLen;
 
-/* HTTP server callback functions */
+
+/* *****************************************************************************
+ * HTTP server handler functions
+ * ****************************************************************************/
 void handleRoot() {
   digitalWrite(LED_BUILTIN, 1);
   server.send(200, "text/html", webdata_index_htm, webdata_index_htm_len);
@@ -124,6 +110,10 @@ void handleData() {
 }
 
 
+/* *****************************************************************************
+ * Arduino main functions
+ * ****************************************************************************/
+
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, 0);
@@ -158,16 +148,13 @@ void setup() {
   server.begin();
   
   // tell FastLED about the LED strip configuration
-  FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(0xFFE0F0);
+  FastLED.addLeds<WS2812,4,GRB>(leds, NUM_LEDS).setCorrection(0xFFE0F0);
 
   // set master brightness control
   FastLED.setBrightness(SETTINGS.brightness);
 }
 
-// List of animation patterns
-typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { colorful, rainbow_fade, sparkles };
-  
+
 void loop()
 {
   MDNS.update();
@@ -176,27 +163,4 @@ void loop()
   FastLED.delay(1000/FRAMES_PER_SECOND);
   gPatterns[SETTINGS.currentPattern]();
   FastLED.show();
-}
-
-void colorful() 
-{
-  CHSV hsv;
-  hsv.hue = SETTINGS.colorful_speed * millis();
-  hsv.val = 255;
-  hsv.sat = ((uint16_t)SETTINGS.colorful_sat) * 5 / 2;
-  for( int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = hsv;
-    hsv.hue += 255 / NUM_LEDS;
-  }
-}
-
-void rainbow_fade()
-{
-  // TODO
-  return;
-}
-
-void sparkles() {
-  // TODO 
-  return;
 }
