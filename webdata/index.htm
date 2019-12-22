@@ -5,7 +5,104 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>LED-Bilderrahmen Webinterface</title>
         <script type="text/javascript">
-            
+            updateLock = false;
+            apiEndpoint = "/api/data/";
+
+            function fetchData() {
+                if (updateLock == true)
+                    return;
+                updateLock = true;
+
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.addEventListener('loadend', function() {
+                    updateLock = false;
+                });
+                xmlhttp.addEventListener("load", onDataLoad);
+                xmlhttp.open("GET", apiEndpoint);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.send();
+            }
+
+            function onDataLoad(event) {
+                if (this.status != 200) {
+                    console.log("Loading data failed.")
+                    return;
+                }
+                try {
+                    var data = JSON.parse(this.responseText);
+                } catch(e) {
+                    console.log("Error parsing json: ", e);
+                    return;
+                }
+
+                for (key in data) {
+                    // TODO special handling for power and currentPattern
+
+                    var inputs = document.getElementsByName(key);
+                    if (inputs.length == 0) {
+                        continue;
+                    }
+                    var input = inputs[0];
+                    if (!input.locked) {
+                        input.value = data[key];
+                    }
+                }
+            }
+
+            function sendData(key, value, callback) {
+                var data = new Object();
+                data[key] = value;
+
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.open("POST", apiEndpoint);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.send(JSON.stringify(data));
+                xmlhttp.addEventListener("load", callback);
+            }
+
+
+            function fieldTimeoutHandler() {
+                if (!this.locked)
+                    return;
+                var value = this.value;
+                this.locked = false;
+                if (this.timeout) {
+                    clearTimeout(this.timeout);
+                    this.timeout = null;
+                }
+
+                var dataType = this.getAttribute('data-type');
+                if (dataType === "int") {
+                    value = parseInt(value);
+                } else if (dataType === "float") {
+                    value = parseFloat(value);
+                }
+                sendData(this.name, value, function() {
+                    fetchData();
+                });
+            }
+
+            function fieldChangeHandler(event) {
+                this.locked = true;
+                if (this.timeout) {
+                    clearTimeout(this.timeout);
+                }
+                this.timeout = setTimeout(fieldTimeoutHandler.bind(this), 700);
+            }
+
+            // Onload function
+            document.addEventListener("DOMContentLoaded", function () {
+                // Register onChange handler for input fields
+                Array.from(document.getElementsByClassName("activeInput"))
+                    .forEach(function(input) {
+                        input.addEventListener("keydown", fieldChangeHandler);
+                        input.addEventListener("blur", fieldTimeoutHandler);
+                    });
+
+                // TODO register onClick handlers for buttons
+                setInterval(fetchData, 5000);
+                fetchData();
+            });
         </script>
         <style type="text/css">
             html {
@@ -101,8 +198,8 @@
                 <button type="button" class="button-modeactivate" data-value="0">Colorful</button>
 
                 <table>
-                    <tr><td>Geschwindigkeit:</td><td><input type="number" name="colorful_speed" value="50"/></td></tr>
-                    <tr><td>Sättigung:</td><td><input type="number" name="colorful_sat" value="50"/></td></tr>
+                    <tr><td>Geschwindigkeit:</td><td><input type="number" class="activeInput" name="colorful_speed" min="0" max="255" data-type="int" /></td></tr>
+                    <tr><td>Sättigung:</td><td><input type="number" class="activeInput" name="colorful_sat" min="0" max="255" data-type="int" /></td></tr>
                 </table>
             </div>
 
@@ -110,10 +207,10 @@
                 <button type="button" class="button-modeactivate active" data-value="1">Rainbow Fade</button>
 
                 <table>
-                    <tr><td>Geschwindigkeit:</td><td><input type="number" name="rainbow_fade_speed" value="50"/></td></tr>
-                    <tr><td>Sättigung:</td><td><input type="number" name="rainbow_fade_sat" value="50"/></td></tr>
-                    <tr><td>Ausdehung:</td><td><input type="number" name="rainbow_fade_size" value="50"/></td></tr>
-                    <tr><td>Richtung:</td><td><input type="number" name="rainbow_fade_direction" value="50"/></td></tr>
+                    <tr><td>Geschwindigkeit:</td><td><input type="number" class="activeInput" name="rainbow_fade_speed" min="0" max="255" data-type="int" /></td></tr>
+                    <tr><td>Sättigung:</td><td><input type="number" class="activeInput" name="rainbow_fade_sat" min="0" max="255" data-type="int" /></td></tr>
+                    <tr><td>Ausdehung:</td><td><input type="number" class="activeInput" name="rainbow_fade_size" min="0" max="255" data-type="int" /></td></tr>
+                    <tr><td>Richtung:</td><td><input type="number" class="activeInput" name="rainbow_fade_direction" min="0" max="255" data-type="int" /></td></tr>
                 </table>
             </div>
 
@@ -121,16 +218,16 @@
                 <button type="button" class="button-modeactivate" data-value="1">Sparkles</button>
 
                 <table>
-                    <tr><td>Sättigung:</td><td><input type="number" name="sparkles_sat" value="50"/></td></tr>
-                    <tr><td>Verblassen:</td><td><input type="number" name="sparkles_fade" value="50"/></td></tr>
-                    <tr><td>Häufigkeit:</td><td><input type="number" name="sparkles_rate" value="50"/></td></tr>
+                    <tr><td>Sättigung:</td><td><input type="number" class="activeInput" name="sparkles_sat" min="0" max="255" data-type="int" /></td></tr>
+                    <tr><td>Verblassen:</td><td><input type="number" class="activeInput" name="sparkles_fade" min="0" max="255" data-type="int" /></td></tr>
+                    <tr><td>Häufigkeit:</td><td><input type="number" class="activeInput" name="sparkles_rate" min="0" max="255" data-type="int" /></td></tr>
                 </table>
             </div>
         </div>
 
         <div id="footer">
             <div class="container">
-                Helligkeit: <input type="number" id="input-brightness" value="50" />
+                Helligkeit: <input type="number" class="activeInput" name="brightness" min="0" max="255" data-type="int" />
             </div>
         </div>
     </body>
