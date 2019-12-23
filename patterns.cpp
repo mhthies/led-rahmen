@@ -26,7 +26,7 @@ void colorful()
 
 static inline uint8_t rainbow_fade_calcHue(int x, int y) {
   return (uint8_t)(
-    (sin8(SETTINGS.rainbow_fade_direction * 255 / 360) * y + cos8(SETTINGS.rainbow_fade_direction * 255 / 360) * x - 256)
+    ((sin8(SETTINGS.rainbow_fade_direction * 255 / 360) - (int)128) * y + (cos8(SETTINGS.rainbow_fade_direction * 255 / 360) - (int)128) * x)
       * 10 / (NUM_LEDS * SETTINGS.rainbow_fade_size));
 }
 
