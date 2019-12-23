@@ -21,7 +21,8 @@ FASTLED_USING_NAMESPACE
 // static setup
 const size_t JSON_CAPACITY = 256;
 const size_t JSON_BUF = 1024;
-const uint16_t FRAMES_PER_SECOND = 120;
+const uint16_t FRAMES_PER_SECOND = 50;
+const unsigned long FRAME_LENGTH = 1000 / FRAMES_PER_SECOND;
 
 
 /* *****************************************************************************
@@ -40,15 +41,15 @@ extern size_t gPatternsLen;
  * HTTP server handler functions
  * ****************************************************************************/
 void handleRoot() {
-  digitalWrite(LED_BUILTIN, 1);
-  server.send(200, "text/html", webdata_index_htm, webdata_index_htm_len);
   digitalWrite(LED_BUILTIN, 0);
+  server.send(200, "text/html", webdata_index_htm, webdata_index_htm_len);
+  digitalWrite(LED_BUILTIN, 1);
 }
 
 void handleData() {
   // GET-Request: Return data
+  digitalWrite(LED_BUILTIN, 0);
   if (server.method() == HTTP_GET) {
-    digitalWrite(LED_BUILTIN, 1);
     StaticJsonDocument<JSON_CAPACITY> doc;
     doc["power"] = SETTINGS.power;
     doc["brightness"] = SETTINGS.brightness;
@@ -64,13 +65,10 @@ void handleData() {
     doc["sparkles_rate"] = SETTINGS.sparkles_rate;
     char buf[JSON_BUF];
     serializeJson(doc, buf);
-    server.send(200, "application/json", buf)  ;
-    // TODO send current data
-    digitalWrite(LED_BUILTIN, 0);
+    server.send(200, "application/json", buf);
 
   // POST-Request: Update data
   } else if (server.method() == HTTP_POST) {
-    digitalWrite(LED_BUILTIN, 1);
 
     // Deserialize JSON data
     StaticJsonDocument<JSON_CAPACITY> doc;
@@ -81,7 +79,7 @@ void handleData() {
       char buf[512];
       snprintf(buf, 512, "deserializeJson() failed: %s", error.c_str());
       server.send(500, "text/plain", buf);
-      digitalWrite(LED_BUILTIN, 0);
+      digitalWrite(LED_BUILTIN, 1);
       return;
     }
 
@@ -167,14 +165,12 @@ void handleData() {
     }
     
     server.send(200, "text/plain", "Success!");
-    digitalWrite(LED_BUILTIN, 0);
 
   // Any other request: Fail
   } else {
-    digitalWrite(LED_BUILTIN, 1);
     server.send(405, "text/plain", "Method Not Allowed");
-    digitalWrite(LED_BUILTIN, 0);
   }
+  digitalWrite(LED_BUILTIN, 1);
 }
 
 
@@ -184,8 +180,9 @@ void handleData() {
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, 0);
+  digitalWrite(LED_BUILTIN, 1);
   delay(1000); // 1 second delay for recovery
+  digitalWrite(LED_BUILTIN, 0);
 
   // Setup serial port for debugging
   Serial.begin(115200);
@@ -194,8 +191,11 @@ void setup() {
   WiFi.begin(ssid, password);
   WiFi.hostname(hostname);
   Serial.println("");
+  bool ledState = false;
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
+    digitalWrite(LED_BUILTIN, ledState);
+    ledState = !ledState;
     Serial.print(".");
   }
   Serial.println("");
@@ -220,15 +220,24 @@ void setup() {
 
   // set master brightness control
   FastLED.setBrightness(SETTINGS.power ? (SETTINGS.brightness * (uint16_t)255 / 100) : 0);
+  
+  Serial.println("Startup finished.");
+  digitalWrite(LED_BUILTIN, 1);
 }
 
 
 void loop()
 {
+  unsigned long tic = millis();
+  // Render LED animation
   gPatterns[SETTINGS.currentPattern]();
   FastLED.show();
+
+  // Handle mDNS and HTTP server
   MDNS.update();
   server.handleClient();
-  // TODO adapt dynamically
-  FastLED.delay(1000/FRAMES_PER_SECOND);
+
+  // Wait remaining time to get constant framerate
+  unsigned long duration = millis() - tic;
+  FastLED.delay((FRAME_LENGTH > duration) ? FRAME_LENGTH - duration : 0);
 }

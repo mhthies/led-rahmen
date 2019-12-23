@@ -16,13 +16,10 @@ void colorful()
   hsv.hue = SETTINGS.colorful_speed * millis() / 3000;
   hsv.val = 255;
   hsv.sat = SETTINGS.colorful_sat * (uint16_t)255 / 100;
-  Serial.println("calculating pattern colorful");
   for (int i = 0; i < NUM_LEDS; i++) {
-    Serial.printf("setting LED %i", i);
     leds[i] = hsv;
     hsv.hue += 255 / NUM_LEDS;
   }
-  Serial.println("finished calculating pattern");
 }
 
 
