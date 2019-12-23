@@ -8,6 +8,7 @@
 #include "patterns.hpp"
 #include "settings.hpp"
 #include "webdata.h"
+#include "constants.h"
 #include "config.h"
 
 /* FastLED setup */
@@ -21,14 +22,11 @@ FASTLED_USING_NAMESPACE
 // static setup
 const size_t JSON_CAPACITY = 256;
 const size_t JSON_BUF = 1024;
-const uint16_t FRAMES_PER_SECOND = 50;
-const unsigned long FRAME_LENGTH = 1000 / FRAMES_PER_SECOND;
 
 
 /* *****************************************************************************
  * Global data
  * ****************************************************************************/
-extern const uint16_t NUM_LEDS = 28;
 CRGB leds[NUM_LEDS];
 Settings SETTINGS;
 ESP8266WebServer server(80);
