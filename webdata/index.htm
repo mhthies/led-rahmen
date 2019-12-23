@@ -97,7 +97,12 @@
                 sendData(this.name, value);
             }
 
-            function fieldChangeHandler(event) {
+            function fieldKeyDownHandler(event) {
+                if (event.keyCode == 13) {
+                    this.blur();
+                    (fieldTimeoutHandler.bind(this))();
+                    return;
+                }
                 this.locked = true;
                 if (this.timeout) {
                     clearTimeout(this.timeout);
@@ -110,7 +115,7 @@
                 // Register onChange handler for input fields
                 Array.from(document.getElementsByClassName("activeInput"))
                     .forEach(function(input) {
-                        input.addEventListener("keydown", fieldChangeHandler);
+                        input.addEventListener("keydown", fieldKeyDownHandler);
                         input.addEventListener("blur", fieldTimeoutHandler);
                     });
 
@@ -139,6 +144,7 @@
                 margin: 0;
             }
             body {
+                font-family: sans-serif;
                 background: #555;
                 color: #ddd;
                 text-shadow: 0 0 5px rgba(0, 0, 0, .3);
