@@ -62,39 +62,42 @@ void sparkles() {
 #define SPARKING 30
 
 void fire() {
-  // Code from https://github.com/FastLED/FastLED/blob/962b1205a7824ff79e2e585f221759accb2ecfd9/examples/Fire2012WithPalette/Fire2012WithPalette.ino
+  // Code based on https://github.com/FastLED/FastLED/blob/962b1205a7824ff79e2e585f221759accb2ecfd9/examples/Fire2012WithPalette/Fire2012WithPalette.ino
 
   // Array of temperature readings at each simulation cell
-  static byte heat[NUM_LEDS/2];
+  static byte heat[2][NUM_LEDS/2];
   static byte driftframe = 0;
 
-  // Step 1.  Cool down every cell a little
+  driftframe++;
+  if (driftframe > 2)
+    driftframe = 0;
+
+  for(int l=0; l<2; l++) {
+    // Step 1.  Cool down every cell a little
     for( int i = 0; i < NUM_LEDS/2; i++) {
-      heat[i] = qsub8( heat[i],  random8(0, ((COOLING * 10) / NUM_LEDS/2) + 2));
+      heat[l][i] = qsub8( heat[l][i],  random8(0, ((COOLING * 10) / NUM_LEDS/2) + 2));
     }
   
     // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-    driftframe++;
-    if (driftframe >= 2) {
+    if (driftframe == 0) {
       for( int k= NUM_LEDS/2 - 1; k >= 2; k--) {
-        heat[k] = (heat[k] + heat[k - 1] + heat[k - 2]/2 + heat[k - 2]/2 ) / 3;
+        heat[l][k] = (heat[l][k] + heat[l][k - 1] + heat[l][k - 2]/2 + heat[l][k - 2]/2 ) / 3;
       }
-      driftframe = 0;
     }
     
     // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
     if( random8() < SPARKING ) {
       int y = random8(4);
-      heat[y] = qadd8( heat[y], random8(160,255) );
+      heat[l][y] = qadd8( heat[l][y], random8(160,255) );
     }
+  }
 
-    // Step 4.  Map from heat cells to LED colors
-    for( int j = 0; j < NUM_LEDS/2; j++) {
-      // Scale the heat value from 0-255 down to 0-220
-      // for best results with color palettes.
-      byte colorindex = scale8( heat[j], 220);
-      CRGB color = ColorFromPalette( HeatColors_p, colorindex);
-      leds[j] = color;
-      leds[NUM_LEDS - j-1] = color;
-    }
+
+  // Step 4.  Map from heat cells to LED colors
+  for( int j = 0; j < NUM_LEDS/2; j++) {
+    // Scale the heat value from 0-255 down to 0-220
+    // for best results with color palettes.
+    leds[j] = ColorFromPalette( HeatColors_p, scale8( heat[0][j], 220));
+    leds[NUM_LEDS - j-1] = ColorFromPalette( HeatColors_p, scale8( heat[1][j], 220));
+  }
 }
