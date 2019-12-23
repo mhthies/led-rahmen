@@ -211,6 +211,19 @@
                 margin-bottom: 10px;
             }
 
+            table.form-layout {
+                width: 100%;
+            }
+            table.form-layout td>input {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            #footer table.form-layout {
+                border-spacing: 0;
+            }
+            #footer table.form-layout td {
+                padding: 0;
+            }
         </style>
     </head>
     <body>
@@ -226,28 +239,28 @@
             <div class="modebox">
                 <button type="button" class="button-modeactivate" data-value="0">Colorful</button>
 
-                <table>
+                <table class="form-layout">
                     <tr><td>Geschwindigkeit:</td><td><input type="number" class="activeInput" name="colorful_speed" min="0" max="100" data-type="int" /></td></tr>
-                    <tr><td>Sättigung:</td><td><input type="number" class="activeInput" name="colorful_sat" min="0" max="100" data-type="int" /></td></tr>
+                    <tr><td>Sättigung:</td><td><input type="number" class="activeInput" name="colorful_sat" min="0" max="100" data-type="int" /></td><td>%</td></tr>
                 </table>
             </div>
 
             <div class="modebox">
                 <button type="button" class="button-modeactivate" data-value="1">Rainbow Fade</button>
 
-                <table>
+                <table class="form-layout">
                     <tr><td>Geschwindigkeit:</td><td><input type="number" class="activeInput" name="rainbow_fade_speed" min="0" max="100" data-type="int" /></td></tr>
-                    <tr><td>Sättigung:</td><td><input type="number" class="activeInput" name="rainbow_fade_sat" min="0" max="100" data-type="int" /></td></tr>
+                    <tr><td>Sättigung:</td><td><input type="number" class="activeInput" name="rainbow_fade_sat" min="0" max="100" data-type="int" /></td><td>%</td></tr>
                     <tr><td>Ausdehung:</td><td><input type="number" class="activeInput" name="rainbow_fade_size" min="1" max="100" data-type="int" /></td></tr>
-                    <tr><td>Richtung:</td><td><input type="number" class="activeInput" name="rainbow_fade_direction" min="0" max="360" data-type="int" /></td></tr>
+                    <tr><td>Richtung:</td><td><input type="number" class="activeInput" name="rainbow_fade_direction" min="0" max="360" data-type="int" /></td><td>°</td></tr>
                 </table>
             </div>
 
             <div class="modebox">
                 <button type="button" class="button-modeactivate" data-value="2">Sparkles</button>
 
-                <table>
-                    <tr><td>Sättigung:</td><td><input type="number" class="activeInput" name="sparkles_sat" min="0" max="100" data-type="int" /></td></tr>
+                <table class="form-layout">
+                    <tr><td>Sättigung:</td><td><input type="number" class="activeInput" name="sparkles_sat" min="0" max="100" data-type="int" /></td><td>%</td></tr>
                     <tr><td>Verblassen:</td><td><input type="number" class="activeInput" name="sparkles_fade" min="0" max="100" data-type="int" /></td></tr>
                     <tr><td>Häufigkeit:</td><td><input type="number" class="activeInput" name="sparkles_rate" min="0" max="100" data-type="int" /></td></tr>
                 </table>
@@ -260,7 +273,9 @@
 
         <div id="footer">
             <div class="container">
-                Helligkeit: <input type="number" class="activeInput" name="brightness" min="0" max="100" data-type="int" />
+                <table class="form-layout">
+                    <tr><td>Helligkeit:</td><td><input type="number" class="activeInput" name="brightness" min="0" max="100" data-type="int" /></td><td>%</td></tr>
+                </table>
             </div>
         </div>
     </body>
