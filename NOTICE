@@ -1,0 +1,12 @@
+LED-Rahmen -- ESP8266 Arduino-based software for an LED-backlit analogue photo frame 
+Copyright 2019 by Michael Thies
+
+This product includes software developed by Michael Thies <mail@mhthies.de>.
+
+---
+
+This product includes work based on the Fire2012 fire simulation by Mark Kriegsman,
+originally published at http://pastebin.com/xYEpxqgq ,
+taken from the FastLED library example sketches
+under the terms of the MIT license
+https://github.com/FastLED/FastLED/blob/962b1205a7824ff79e2e585f221759accb2ecfd9/examples/Fire2012WithPalette/Fire2012WithPalette.ino
